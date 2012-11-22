@@ -8,6 +8,7 @@ public class CardImageManager : MonoBehaviour {
 	
 	// Properties
 	public Shader _cardShader;
+	public Texture2D _cardBack;
 	
 	// Images
 	Dictionary<string, Material> _cardImageMaterials = new Dictionary<string, Material>();
@@ -18,17 +19,18 @@ public class CardImageManager : MonoBehaviour {
 	}
 	
 	IEnumerator LoadCardImageInto(string name, Material material) {
-		material.mainTexture = new Texture2D(4, 4, TextureFormat.DXT1, false);
 		var www = new WWW(CardImageManager.CardImageURLByName(name));
 		while (!www.isDone) {
 			yield return new WaitForSeconds(.5f);
 		}
+		material.mainTexture = new Texture2D(4, 4, TextureFormat.DXT1, false);
 		www.LoadImageIntoTexture(material.mainTexture as Texture2D);
 	}
 	
 	public Material GetImageMaterial(string name) {
 		if (!_cardImageMaterials.ContainsKey(name) ) {
 			Material newImageMaterial = new Material(_cardShader);
+			newImageMaterial.mainTexture = _cardBack;
 			_cardImageMaterials.Add(name, newImageMaterial);
 			StartCoroutine(LoadCardImageInto(name, newImageMaterial));
 		}
@@ -38,9 +40,11 @@ public class CardImageManager : MonoBehaviour {
 	
 	public static string CardImageURLByName(string name)
 	{
+		//return "http://static.ddmcdn.com/gif/how-to-solve-cat-behavior-problems-2.jpg";
+		
 		string nameFixed = name.Replace(" ", "%20");
-		//return "http://gatherer.wizards.com/Handlers/Image.ashx?name=" + name + "&type=card";
-		return ("http://deckbox.org/mtg/" + nameFixed + "/tooltip");
+		return "http://gatherer.wizards.com/Handlers/Image.ashx?name=" + nameFixed + "&type=card";
+		//return "http://deckbox.org/mtg/" + nameFixed + "/tooltip";
 	}
 	
 	public static string CardInfoURLByName(string name)
