@@ -40,11 +40,12 @@ public class CardImageManager : MonoBehaviour {
 	
 	public static string CardImageURLByName(string name)
 	{
+		//return "http://www.canadianpetconnection.com/wp-content/uploads/2011/09/Cats1.jpg";
 		//return "http://static.ddmcdn.com/gif/how-to-solve-cat-behavior-problems-2.jpg";
 		
 		string nameFixed = name.Replace(" ", "%20");
-		return "http://gatherer.wizards.com/Handlers/Image.ashx?name=" + nameFixed + "&type=card";
-		//return "http://deckbox.org/mtg/" + nameFixed + "/tooltip";
+		//return "http://gatherer.wizards.com/Handlers/Image.ashx?name=" + nameFixed + "&type=card";
+		return "http://deckbox.org/mtg/" + nameFixed + "/tooltip.jpg";
 	}
 	
 	public static string CardInfoURLByName(string name)
