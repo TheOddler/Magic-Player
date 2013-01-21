@@ -6,6 +6,6 @@ public class Card : MonoBehaviour {
 	public string _name = "Frenetic Raptor";
 	
 	void Start () {
-		renderer.material = CardImageManager.Instance.GetImageMaterial(_name);
+		renderer.material = CardInfoManager.Instance.CardInfo[_name].ImageMaterial;
 	}
 }

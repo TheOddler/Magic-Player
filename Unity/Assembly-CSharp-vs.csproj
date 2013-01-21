@@ -44,9 +44,11 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\Resources\Card Info\CardInfoManager.cs" />
      <Compile Include="Assets\Resources\Card\Card.cs" />
-     <Compile Include="Assets\Resources\Card\ImageManager\CardImageManager.cs" />
+     <Compile Include="Assets\Resources\Debug\Console.cs" />
      <Compile Include="Assets\Resources\Other\Helpers\Extensions.cs" />
+     <None Include="Assets\Resources\Card Info\mtg_card_database.xml" />
      <None Include="Assets\Resources\Other\Shaders\shader_Diffuse.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

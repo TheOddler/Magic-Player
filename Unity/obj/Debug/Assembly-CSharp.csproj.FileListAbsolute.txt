@@ -1,0 +1,5 @@
+C:\Users\Pablo\Pablo%27s Documents\Projects\Magic Player\Unity\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\Pablo\Pablo%27s Documents\Projects\Magic Player\Unity\Temp\bin\Debug\Assembly-CSharp.dll
+C:\Users\Pablo\Pablo%27s Documents\Projects\Magic Player\Unity\Temp\bin\Debug\Assembly-CSharp.pdb
+C:\Users\Pablo\Pablo%27s Documents\Projects\Magic Player\Unity\obj\Debug\Assembly-CSharp.dll
+C:\Users\Pablo\Pablo%27s Documents\Projects\Magic Player\Unity\obj\Debug\Assembly-CSharp.pdb
