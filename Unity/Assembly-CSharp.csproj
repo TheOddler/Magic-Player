@@ -48,6 +48,8 @@
      <Compile Include="Assets\Resources\Card\Card.cs" />
      <Compile Include="Assets\Resources\Debug\Console.cs" />
      <Compile Include="Assets\Resources\Other\Helpers\Extensions.cs" />
+     <Compile Include="Assets\Resources\Other\Helpers\Helpers.cs" />
+     <None Include="Assets\Resources\Other\Shaders\shader_3DText.shader" />
      <None Include="Assets\Resources\Card Info\mtg_card_database.xml" />
      <None Include="Assets\Resources\Other\Shaders\shader_Diffuse.shader" />
   </ItemGroup>

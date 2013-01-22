@@ -44,8 +44,14 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Plugins\Console.cs" />
+     <Compile Include="Assets\Plugins\Text\Scripts\BitmapFont.cs" />
+     <Compile Include="Assets\Plugins\Text\Scripts\BitmapFontDemo.cs" />
+     <Compile Include="Assets\Plugins\Text\Scripts\Orthographic.cs" />
+     <Compile Include="Assets\Plugins\Text\Scripts\SpriteManager.cs" />
+     <None Include="Assets\Plugins\Text\Fonts\Impact20.xml" />
+     <None Include="Assets\Resources\Other\Shaders\shader_3DText.shader" />
      <None Include="Assets\Resources\Card Info\mtg_card_database.xml" />
+     <None Include="Assets\Plugins\Text\Fonts\Arial16.xml" />
      <None Include="Assets\Resources\Other\Shaders\shader_Diffuse.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
