@@ -13,14 +13,14 @@ using System.Linq;
 public class Console : MonoBehaviour
 {
 	public static readonly Version version = new Version(1, 0);
- 
+	
 	struct ConsoleMessage
 	{
 		public readonly string	message;
 		public readonly string	stackTrace;
 		public readonly LogType	type;
 		public readonly float	removeTime;
- 
+		
 		public ConsoleMessage (string message, string stackTrace, LogType type, float removeTime)
 		{
 			this.message	= message;
@@ -29,26 +29,21 @@ public class Console : MonoBehaviour
 			this.removeTime	= removeTime;
 		}
 	}
- 
+	
 	public KeyCode toggleKey = KeyCode.BackQuote;
 	public KeyCode collapseToggleKey = KeyCode.Plus;
- 
+	
 	List<ConsoleMessage> entries = new List<ConsoleMessage>();
 	Vector2 scrollPos;
 	bool show = true;
 	bool collapse;
- 
+	
 	// Visual elements:
- 
 	const int margin = 20;
-	Rect windowRect = new Rect(margin, margin, Screen.width - (2 * margin), Screen.height - (2 * margin));
- 
-	GUIContent clearLabel    = new GUIContent("Clear",    "Clear the contents of the console.");
-	GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
- 
+	
 	void OnEnable  () { Application.RegisterLogCallback(HandleLog); }
 	void OnDisable () { Application.RegisterLogCallback(null); }
- 
+	
 	void Update ()
 	{
 		if (Input.GetKeyDown(toggleKey)) {
@@ -60,7 +55,7 @@ public class Console : MonoBehaviour
 		
 		entries.RemoveAll(message => Time.realtimeSinceStartup > message.removeTime);
 	}
- 
+	
 	void OnGUI ()
 	{
 		if (!show) {

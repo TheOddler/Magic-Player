@@ -49,6 +49,9 @@
      <Compile Include="Assets\Resources\Debug\Console.cs" />
      <Compile Include="Assets\Resources\Other\Helpers\Extensions.cs" />
      <Compile Include="Assets\Resources\Other\Helpers\Helpers.cs" />
+     <Compile Include="Assets\Resources\Other\Scripts\ICardContainer.cs" />
+     <Compile Include="Assets\Resources\Other\Scripts\LookAtMainCam.cs" />
+     <Compile Include="Assets\Resources\Player\Player.cs" />
      <None Include="Assets\Resources\Other\Shaders\shader_3DText.shader" />
      <None Include="Assets\Resources\Card Info\mtg_card_database.xml" />
      <None Include="Assets\Resources\Other\Shaders\shader_Diffuse.shader" />

@@ -27,7 +27,8 @@ public class CardInfoManager : MonoBehaviour {
 			return _cardBack;
 		}
 	}
-
+	
+	public bool _loadDatabaseOnline = false;
 	public TextAsset _database;
 	
 	// Info
@@ -52,16 +53,28 @@ public class CardInfoManager : MonoBehaviour {
 	
 	public IEnumerator LoadDatabase() {
 		float startTime = Time.realtimeSinceStartup;
+		bool bytesLoadedSucessfully = true;
+		byte[] byets;
 		
-		var www = new WWW("https://dl.dropbox.com/u/10448192/Magic%20Player/CardDatabase/mtg_card_database.xml");
-		yield return www;
-		if (www.error != null) {
-			Debug.Log("Could not load databse: " + www.error);
+		if (_loadDatabaseOnline) {
+			var www = new WWW("https://dl.dropbox.com/u/10448192/Magic%20Player/CardDatabase/mtg_card_database.xml");
+			yield return www;
+			if (www.error != null) {
+				Debug.Log("Could not load databse: " + www.error);
+				bytesLoadedSucessfully = false;
+			}
+			
+			byets = www.bytes;
 		}
 		else {
+			byets = _database.bytes;
+		}
+		
+		if (bytesLoadedSucessfully) {
+		
 			Debug.Log("Downloaded Database in " + (Time.realtimeSinceStartup - startTime) + " seconds.");
 			
-			MemoryStream assetStream = new MemoryStream(www.bytes);
+			MemoryStream assetStream = new MemoryStream(byets);
 			
 			XmlReaderSettings settings = new XmlReaderSettings();
 			settings.IgnoreComments = true;
@@ -103,12 +116,12 @@ public class CardInfoManager : MonoBehaviour {
 						tempCardInfo.Toughness = reader.ReadElementContentAsString();
 						break;
 						
-					case "rules":
-						tempCardInfo.Rules = reader.ReadElementContentAsString();
+					case "type":
+						tempCardInfo.Type = reader.ReadElementContentAsString();
 						break;
 						
-					case "flavor":
-						tempCardInfo.Flavor = reader.ReadElementContentAsString();
+					case "rules":
+						tempCardInfo.Rules = reader.ReadElementContentAsString();
 						break;
 					}
 				}
@@ -136,16 +149,17 @@ public class CardInfoManager : MonoBehaviour {
 		}
 	}
 	
-	public IEnumerator LoadCardImageInto(CardInfo info, Material material) {
-		var www = new WWW(info.ImageURL);
+	public IEnumerator LoadCardImageInto(string url, Material material) {
+		var www = new WWW(url);
 		yield return www;
 		
 		if (www.error == null) {
 			material.mainTexture = new Texture2D(4, 4, TextureFormat.DXT1, false);
 			www.LoadImageIntoTexture(material.mainTexture as Texture2D);
+			material.mainTexture.anisoLevel = 4;
 		}
 		else {
-			Debug.Log("Card not found: " + www.error);
+			Debug.Log("Card not found: " + url + "; with error: " + www.error);
 		}
 	}
 }
@@ -205,6 +219,16 @@ public class CardInfo {
 		}
 	}
 	
+	private string _type = UNUSED_VALUE;
+	public string Type {
+		get {
+			return _type;
+		}
+		set {
+			_type = value;
+		}
+	}
+	
 	private string _rules = UNUSED_VALUE;
 	public string Rules {
 		get {
@@ -212,16 +236,6 @@ public class CardInfo {
 		}
 		set {
 			_rules = value;
-		}
-	}
-	
-	private string _flavor = UNUSED_VALUE;
-	public string Flavor {
-		get {
-			return _flavor;
-		}
-		set {
-			_flavor = value;
 		}
 	}
 	
@@ -233,7 +247,7 @@ public class CardInfo {
 				var manager = CardInfoManager.Instance;
 				_imageMaterial = new Material(manager.CardShader);
 				_imageMaterial.mainTexture = manager.CardBack;
-				manager.StartCoroutine(manager.LoadCardImageInto(this, _imageMaterial));
+				manager.StartCoroutine(manager.LoadCardImageInto(ImageURL, _imageMaterial));
 			}
 			return _imageMaterial;
 		}
@@ -241,8 +255,23 @@ public class CardInfo {
 	
 	public string ImageURL {
 		get {
+			if (_ids.Count == 0) {
+				return LQImageURL;
+			}
+			else {
+				return HQImageURL;
+			}
+		}
+	}
+	public string LQImageURL {
+		get {
 			string nameFixed = Name.Replace(" ", "%20");
 			return "http://deckbox.org/mtg/" + nameFixed + "/tooltip.jpg";
+		}
+	}
+	public string HQImageURL {
+		get {
+			return "https://dl.dropbox.com/u/10448192/Magic%20Player/Images/" + _ids[0] + ".full.jpg";
 		}
 	}
 	
@@ -250,12 +279,23 @@ public class CardInfo {
 		if (info.Name != _name) throw new UnityException("Trying to add info of two different cards together");
 		
 		_ids.AddRange(info.IDs);
-		_cost = info.Cost;
-		_power = info.Power;
-		_toughness = info.Toughness;
-		_rules = info.Rules;
-		_flavor = info.Flavor;
 		
+		if (_cost != UNUSED_VALUE && _cost != info.Cost) Debug.LogWarning("Added info of card with same name but different cost: " + info.Name);
+		_cost = info.Cost;
+		
+		if (_power != UNUSED_VALUE && _power != info.Power) Debug.LogWarning("Added info of card with same name but different power: " + info.Name);
+		_power = info.Power;
+		
+		if (_toughness != UNUSED_VALUE && _toughness != info.Toughness) Debug.LogWarning("Added info of card with same name but different toughness: " + info.Name);
+		_toughness = info.Toughness;
+		
+		if (_rules != UNUSED_VALUE && _rules != info.Rules) Debug.LogWarning("Added info of card with same name but different rules: " + info.Name);
+		_rules = info.Rules;
+		
+		if (_ids.Count > 0 && _imageMaterial != null) {
+			var manager = CardInfoManager.Instance;
+			manager.StartCoroutine(manager.LoadCardImageInto(HQImageURL, _imageMaterial));
+		}
 		if (Updated != null) Updated();
 	}
 }
