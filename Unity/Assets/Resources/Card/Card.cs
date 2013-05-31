@@ -41,27 +41,25 @@ public class Card : MonoBehaviour {
 		_wantedTransform = transform;
 	}
 	
+	public void Initialize(string name) {
+		if (_info != null) {
+			if (name == _info.Name) return;
+			_info.Updated -= HandleInfoUpdated;
+		}
+		_info = CardInfoManager.Instance.GetCardInfo(name);
+		_info.Updated += HandleInfoUpdated;
+		HandleInfoUpdated();
+	}
+	
+	
 	void Update () {
 		transform.position = Vector3.MoveTowards(transform.position, _wantedTransform.position, 10.0f * Time.deltaTime);
 		transform.rotation = Quaternion.RotateTowards(transform.rotation, _wantedTransform.rotation, 90.0f * Time.deltaTime);
 	}
 	
-	public void Zoom () {
-		_wantedTransform = Player.Players[0].ZoomLocation;
-		_powerTouchness.gameObject.active = false;
-	}
 	
-	public void Initialize(string name) {
-		if (_info != null) {
-			if (name == _info.Name) return;
-			_info.Updated -= UpdateInfo;
-		}
-		_info = CardInfoManager.Instance.GetCardInfo(name);
-		_info.Updated += UpdateInfo;
-		UpdateInfo();
-	}
 	
-	public void UpdateInfo() {
+	public void HandleInfoUpdated() {
 		renderer.material = _info.ImageMaterial;
 		
 		_powerTouchness.text =

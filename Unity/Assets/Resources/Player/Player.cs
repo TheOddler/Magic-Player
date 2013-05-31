@@ -30,15 +30,8 @@ public class Player : MonoBehaviour {
 	}
 	
 	void Update () {
-		if (Input.GetMouseButtonDown(0)) {
-			Ray ray = _playerCam.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hit;
-			if (Physics.Raycast(ray, out hit)) {
-				var cardComp = hit.transform.GetComponent<Card>();
-				if (cardComp != null) {
-					cardComp.Zoom();
-				}
-			}
-		}
+		
+		
+		
 	}
 }
