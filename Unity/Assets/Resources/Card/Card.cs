@@ -36,21 +36,12 @@ public class Card : MonoBehaviour {
 	
 	public Transform _wantedTransform;
 	
+	
+	
 	void Start () {
 		if (!string.IsNullOrEmpty(testName)) Initialize(testName);
 		_wantedTransform = transform;
 	}
-	
-	public void Initialize(string name) {
-		if (_info != null) {
-			if (name == _info.Name) return;
-			_info.Updated -= HandleInfoUpdated;
-		}
-		_info = CardInfoManager.Instance.GetCardInfo(name);
-		_info.Updated += HandleInfoUpdated;
-		HandleInfoUpdated();
-	}
-	
 	
 	void Update () {
 		transform.position = Vector3.MoveTowards(transform.position, _wantedTransform.position, 10.0f * Time.deltaTime);
@@ -58,6 +49,17 @@ public class Card : MonoBehaviour {
 	}
 	
 	
+	
+	public void Initialize(string name) {
+		if (_info != null) { // We already initialized once
+			if (name == _info.Name) return; // Name is the same so info should be the same too
+			else _info.Updated -= HandleInfoUpdated; // Different name so we need te reinitialize.
+		}
+		// (Re)Initialize
+		_info = CardInfoManager.Instance.GetCardInfo(name);
+		_info.Updated += HandleInfoUpdated;
+		HandleInfoUpdated();
+	}
 	
 	public void HandleInfoUpdated() {
 		renderer.material = _info.ImageMaterial;
