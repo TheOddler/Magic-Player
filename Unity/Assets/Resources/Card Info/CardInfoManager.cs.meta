@@ -1,8 +1,0 @@
-fileFormatVersion: 2
-guid: 5299c46f2a622a54d98eb4f5d975c81a
-MonoImporter:
-  serializedVersion: 2
-  defaultReferences:
-  - _cardShader: {fileID: 4800000, guid: e45ccc953f1730c42b8d174a8cb3b828, type: 1}
-  executionOrder: -1000
-  icon: {instanceID: 0}
