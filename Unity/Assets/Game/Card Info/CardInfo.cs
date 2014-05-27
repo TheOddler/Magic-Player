@@ -38,7 +38,7 @@ public class CardInfo {
 	public CardInfo(string name) {
 		Name = name;
 
-		Updated += TryUpdateMaterial;
+		Updated += UpdateMaterialIfUsed;
 	}
 
 	public void CallUpdated() {
@@ -50,6 +50,7 @@ public class CardInfo {
 	public void SetInfo(Dictionary<string,object> info) {
 		lock (this) {
 			Name = info["name"] as string;
+			
 			if (info.ContainsKey("imageName")) ImageName = info["imageName"] as string;
 			
 			if (info.ContainsKey("manaCost")) ManaCost = info["manaCost"] as string;
@@ -97,14 +98,14 @@ public class CardInfo {
 				_imageMaterial.mainTexture = manager.CardBack;
 			}
 			if (!string.IsNullOrEmpty(ImageName)) {
-				TryUpdateMaterial();
+				UpdateMaterialIfUsed();
 			}
 			return _imageMaterial;
 		}
 	}
 
-	void TryUpdateMaterial() {
-		// only try to update the material if it is being used (_imageMaterial != null).
+	void UpdateMaterialIfUsed() {
+		// only update the material if it is being used (_imageMaterial != null).
 		if (_imageMaterial != null && !string.IsNullOrEmpty(ImageName)) {
 			var manager = CardInfoManager.Instance;
 			manager.StartCoroutine(manager.LoadCardImageInto(ImageURL, _imageMaterial));

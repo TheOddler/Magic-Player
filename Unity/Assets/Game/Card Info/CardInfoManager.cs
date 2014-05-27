@@ -6,7 +6,6 @@ using System.Threading;
 using MiniJSON;
 
 public class CardInfoManager : MonoBehaviour {
-	public const int NUMBER_OF_CARDS_TO_READ_PER_FRAME = 100;
 	
 	static CardInfoManager _instance;
 	public static CardInfoManager Instance { get { return _instance; } }
@@ -28,7 +27,7 @@ public class CardInfoManager : MonoBehaviour {
 	
 	public bool _loadDatabaseOnline = false;
 	public TextAsset _database;
-	public string _databaseString;
+	string _databaseString;
 
 	Thread _databaseLoadingThread;
 	bool _databaseThreadWasAlive;
@@ -66,11 +65,13 @@ public class CardInfoManager : MonoBehaviour {
 	
 	public CardInfo GetCardInfo(string name) {
 		lock (_cardInfo) {
-			if (!_cardInfo.ContainsKey (name)) {
-				var card = new CardInfo (name);
-				_cardInfo.Add (name, card);
+			var simpleName = name.Simplify();
+			// If you try to get the Card Info before it was loaded from the database, create a temp one and it will be filled when loaded by the database.
+			if (!_cardInfo.ContainsKey (simpleName)) {
+				var card = new CardInfo (simpleName);
+				_cardInfo.Add (simpleName, card);
 			}
-			return _cardInfo [name];
+			return _cardInfo [simpleName];
 		}
 	}
 	

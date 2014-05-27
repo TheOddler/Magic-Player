@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using UnidecodeSharpFork;
 
 public delegate void SimpleEventHandler();
 
@@ -39,6 +40,11 @@ public static class Helpers {
 		}
 		
 		return wrapped.ToString();
+	}
+	
+	
+	public static string Simplify(this string name) {
+		return name.Unidecode().ToLowerInvariant();
 	}
 	
 }

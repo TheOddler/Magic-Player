@@ -10,10 +10,29 @@ public class Card : Photon.MonoBehaviour {
 	
 	const int MAX_LETTERS_WIDTH_NAME = 14;
 	
-	public string testName;
-	public TextMesh _powerTouchness;
+	//
+	// Binding
+	// ----------------------
+	public Renderer _cardFrontRenderer;
+	public TextMesh _powerToughness;
 	
+	//
+	// Info
+	// ----------------------
 	private CardInfo _info;
+	
+	public string _name;
+	public string Name {
+		get {
+			return _name;
+		}
+		set {
+			if (_name != value) {
+				_name = value;
+				UpdateInfo();
+			}
+		}
+	}
 
 	public Player _owner;
 	public Player Owner {
@@ -40,7 +59,7 @@ public class Card : Photon.MonoBehaviour {
 	
 	
 	void Start () {
-		if (!string.IsNullOrEmpty(testName)) Initialize(testName);
+		if (!string.IsNullOrEmpty(_name)) UpdateInfo();
 		_wantedTransform = transform;
 	}
 	
@@ -51,25 +70,28 @@ public class Card : Photon.MonoBehaviour {
 	
 	
 	
-	public void Initialize(string name) {
+	public void UpdateInfo() {
+		if (string.IsNullOrEmpty(_name)) {
+			throw new UnityException("Trying to update the card info without setting a _name");
+		}
+		
 		if (_info != null) { // We already initialized once
-			if (name == _info.Name) return; // Name is the same so info should be the same too
-			else _info.Updated -= HandleInfoUpdated; // Different name so we need te reinitialize.
+			_info.Updated -= HandleInfoUpdated; // Different name so we need te reinitialize.
 		}
 		// (Re)Initialize
-		_info = CardInfoManager.Instance.GetCardInfo(name);
+		_info = CardInfoManager.Instance.GetCardInfo(_name);
 		_info.Updated += HandleInfoUpdated;
 		HandleInfoUpdated();
 	}
 	
 	public void HandleInfoUpdated() {
-		renderer.material = _info.ImageMaterial;
+		_cardFrontRenderer.material = _info.ImageMaterial;
 
 		if (string.IsNullOrEmpty (_info.Power) && string.IsNullOrEmpty (_info.Toughness)) {
-			_powerTouchness.text = "";
+			_powerToughness.text = "";
 		}
 		else {
-			_powerTouchness.text = _info.Power + "/" + _info.Toughness;
+			_powerToughness.text = _info.Power + "/" + _info.Toughness;
 		}
 	}
 }
