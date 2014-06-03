@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using MiniJSON;
 
 public class CardInfo {
 
@@ -9,7 +10,7 @@ public class CardInfo {
 	
 
 	public string Name { get; private set; }
-	public string ImageName { get; private set; }
+	public string ImageURL { get; private set; }
 
 	public string ManaCost { get; private set; }
 	public double ConvertedManaCost { get; private set; }
@@ -18,21 +19,9 @@ public class CardInfo {
 	public string Toughness { get; private set; }
 	public long Loyalty { get; private set; }
 
-	public List<string> Colors { get; private set; }
-
-	public string Type { get; private set; }
-	public string Supertypes { get; private set; }
-	public string Types { get; private set; }
-	public string Subtypes { get; private set; }
-
-	public string Rarity { get; private set; }
 	public string Text { get; private set; }
 	public string Flavor { get; private set; }
-	public string Artist { get; private set; }
-
-	public string Layout { get; private set; }
-
-	public string Number { get; private set; }
+	
 	public long MultiverseID { get; private set; }
 
 	public CardInfo(string name) {
@@ -47,21 +36,24 @@ public class CardInfo {
 		}
 	}
 	
-	public void SetInfo(Dictionary<string,object> info) {
+	public void SetInfoFromLocalDatabase(Dictionary<string,object> info) {
 		lock (this) {
 			Name = info["name"] as string;
 			
-			if (info.ContainsKey("imageName")) ImageName = info["imageName"] as string;
+			if (info.ContainsKey("imageName")) {
+				ImageURL = "http://mtgimage.com/card/" + (info["imageName"] as string) + ".jpg";
+			}
 			
 			if (info.ContainsKey("manaCost")) ManaCost = info["manaCost"] as string;
+			
 			// can have a decimal point, though this only occurs with unhinged cards.
 			if (info.ContainsKey ("cmc")) {
 				object cmc = info["cmc"];
 				if (cmc.GetType() == typeof(double)) {
-					ConvertedManaCost = (double)info["cmc"];
+					ConvertedManaCost = (double)cmc;
 				}
 				else {
-					ConvertedManaCost = (double)((long)info["cmc"]);
+					ConvertedManaCost = (double)((long)cmc);
 				}
 			}
 
@@ -69,25 +61,87 @@ public class CardInfo {
 			if (info.ContainsKey("toughness")) Toughness = info["toughness"] as string;
 			if (info.ContainsKey("loyalty")) Loyalty = (long)info["loyalty"];
 
-			if (info.ContainsKey("colors")) Colors = (info["colors"] as List<object>).ConvertAll(input=>input as string);
-
-			if (info.ContainsKey("type")) Type = info["type"] as string;
-			if (info.ContainsKey("supertypes")) Supertypes = info["supertypes"] as string;
-			if (info.ContainsKey("types")) Types = info["types"] as string;
-			if (info.ContainsKey("subtypes")) Subtypes = info["subtypes"] as string;
-
-			if (info.ContainsKey("rarity")) Rarity = info["rarity"] as string;
 			if (info.ContainsKey("text")) Text = info["text"] as string;
 			if (info.ContainsKey("flavor")) Flavor = info["flavor"] as string;
-			if (info.ContainsKey("artist")) Artist = info["artist"] as string;
-
-			if (info.ContainsKey("layout")) Layout = info["layout"] as string;
-
-			if (info.ContainsKey("number")) Number = info["number"] as string;
+			
 			if (info.ContainsKey("multiverseid")) MultiverseID = (long)info["multiverseid"];
 		}
+		
+		//Used on separate thread, so don't call update here. Will be called when all cards are loaded by the CardInfoManager.
 	}
-
+	
+	public void SetInfoFromMTGdbinfo(Dictionary<string,object> info) {
+		lock (this) {
+			Name = info["name"] as string;
+			
+			if (info.ContainsKey("name")) {
+				ImageURL = "http://mtgimage.com/card/" + (info["name"] as string) + ".jpg";
+			}
+			
+			if (info.ContainsKey("manaCost")) ManaCost = info["manaCost"] as string; //TODO possibly manacost instead of capital C
+			
+			// can have a decimal point, though this only occurs with unhinged cards.
+			if (info.ContainsKey ("convertedManaCost")) {
+				object cmc = info["convertedManaCost"];
+				if (cmc.GetType() == typeof(double)) {
+					ConvertedManaCost = (double)cmc;
+				}
+				else {
+					ConvertedManaCost = (double)((long)cmc);
+				}
+			}
+			
+			if (info.ContainsKey("power")) Power = info["power"] as string;
+			if (info.ContainsKey("toughness")) Toughness = info["toughness"] as string;
+			if (info.ContainsKey("loyalty")) Loyalty = (long)info["loyalty"];
+			
+			if (info.ContainsKey("description")) Text = info["description"] as string;
+			if (info.ContainsKey("flavor")) Flavor = info["flavor"] as string;
+			
+			if (info.ContainsKey("id")) MultiverseID = (long)info["id"];
+		}
+		
+		CallUpdated();
+	}
+	
+	public void SetInfoFromMTGapicom(Dictionary<string,object> info) {
+		lock (this) {
+			Name = info["name"] as string;
+			
+			if (info.ContainsKey("name")) {
+			//if (info.ContainsKey("image")) {
+				ImageURL = "http://mtgimage.com/card/" + (info["name"] as string).Simplify() + ".jpg";
+				//ImageURL = info["image"] as string; //don't use the gatherer image. This will give crossdomain error.
+			}
+			
+			if (info.ContainsKey("mana")) {
+				/*var mana = info["mana"];
+				var manaObjectList = mana as List<object>;
+				var manaStringList = manaObjectList.OfType<string>();
+				var manaArray = manaStringList.ToArray();*/
+				ManaCost = string.Join("\n", (info["mana"] as List<object>).OfType<string>().ToArray());
+			}
+			
+			// can have a decimal point, though this only occurs with unhinged cards.
+			if (info.ContainsKey ("cmc")) {
+				ConvertedManaCost = double.Parse(info["cmc"] as string);
+			}
+			
+			if (info.ContainsKey("power")) Power = info["power"] as string;
+			if (info.ContainsKey("toughness")) Toughness = info["toughness"] as string;
+			if (info.ContainsKey("loyalty")) Loyalty = (long)info["loyalty"];
+			
+			if (info.ContainsKey("text")) {
+				Text = string.Join("\n", (info["text"] as List<object>).OfType<string>().ToArray());
+			}
+			if (info.ContainsKey("flavor")) {
+				Flavor = string.Join("\n", (info["flavor"] as List<object>).OfType<string>().ToArray());
+			}
+			if (info.ContainsKey("id")) MultiverseID = long.Parse(info["id"] as string);
+		}
+		
+		CallUpdated();
+	}
 	
 	private Material _imageMaterial;
 	public Material ImageMaterial {
@@ -97,7 +151,7 @@ public class CardInfo {
 				_imageMaterial = new Material(manager.CardShader);
 				_imageMaterial.mainTexture = manager.CardBack;
 			}
-			if (!string.IsNullOrEmpty(ImageName)) {
+			if (!string.IsNullOrEmpty(ImageURL)) {
 				UpdateMaterialIfUsed();
 			}
 			return _imageMaterial;
@@ -106,15 +160,9 @@ public class CardInfo {
 
 	void UpdateMaterialIfUsed() {
 		// only update the material if it is being used (_imageMaterial != null).
-		if (_imageMaterial != null && !string.IsNullOrEmpty(ImageName)) {
+		if (_imageMaterial != null && !string.IsNullOrEmpty(ImageURL)) {
 			var manager = CardInfoManager.Instance;
 			manager.StartCoroutine(manager.LoadCardImageInto(ImageURL, _imageMaterial));
-		}
-	}
-
-	public string ImageURL {
-		get {
-			return "http://mtgimage.com/card/" + ImageName + ".jpg";
 		}
 	}
 }

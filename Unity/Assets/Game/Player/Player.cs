@@ -7,42 +7,90 @@ public enum GameState {
 	Zoomed,
 }
 
-public class Player : Photon.MonoBehaviour {
+public class Player : NetworkMonobehaviour {
 	
-	private static List<Player> _players = new List<Player>();
-	public static List<Player> Players {
+	public Card _cardPrefab;
+	public List<string> _testCards;
+	
+	public LayerMask _cardLayerMask;
+	
+	int _playerNumber = -1; //-1 means observer or not yet set (default). Anything else means the actual player number.
+	public int PlayerNumber {
 		get {
-			return _players;
+			return _playerNumber;
 		}
 	}
 	
-	public Transform _zoomLocation;
-	public Transform ZoomLocation {
-		get {
-			return this._zoomLocation;
-		}
-	}
-	
-	public Camera _playerCam;
+	Camera _camera;
 	
 	void Awake () {
-		_players.Add(this);
+		InitializeNetworking();
+		PlayersManager.Instance.RegisterPlayer(this);
 	}
 
 	void Start () {
-		if (photonView.isMine) {
-			Debug.Log ("Player start");
-			Camera.main.gameObject.SetActive (false);
-			_playerCam.gameObject.SetActive (true);
-		}
-		else {
-			_playerCam.gameObject.SetActive (false);
+		if (IsMine) {
+			RequestPlayerNumber();
 		}
 	}
 	
+	void OnDestroy() {
+		PlayersManager.Instance.UnregisterPlayer(this);
+	}
+	
 	void Update () {
-		if (photonView.isMine) {
+		if (IsMine) {
+			if (Input.GetMouseButtonUp(0)) {
+				var card = NetworkInstantiate<Card>(_cardPrefab, Vector3.zero, Quaternion.identity);
+				card.Initialize(_testCards.RandomElement(), _playerNumber);
+			}
+			
 			
 		}
+	}
+	
+	void OnPlayerConnected(NetworkPlayer player) {
+		CallRemote(player, DoSetPlayerNumber, _playerNumber);
+	}
+	
+	void OnPhotonPlayerConnected (PhotonPlayer player) {
+		CallRemote(player, DoSetPlayerNumber, _playerNumber);
+	}
+	
+	
+	//
+	// Player Number
+	// -------------------------------
+	void RequestPlayerNumber() {
+		CallRemote (CallMode.Server, DoRequestPlayerNumber);
+	}
+	[RPC]
+	void DoRequestPlayerNumber() {
+		if (!IsServer) throw new UnityException("This should only be called on the server since it's the server that manages the player numbers.");
+		
+		PlayersManager.Instance.RequestNumberFor(this);
+	}
+	
+	public void SetPlayerNumber(int number) {
+		DoSetPlayerNumber(number);
+		CallRemote(CallMode.Others, DoSetPlayerNumber, number);
+	}
+	[RPC]
+	void DoSetPlayerNumber(int number) {
+		_playerNumber = number;
+		name = "Player " + number;
+		
+		if (number >= 0 && IsMine) {
+			// If after requesting a number it turns out you're a player, and not an observer
+			TakeSeat();
+		}
+	}
+	
+	//
+	// Take Seat
+	// ----------------------------
+	void TakeSeat() {
+		// Set the correct camera
+		PlayersManager.Instance.PlayerSeats[_playerNumber].TakeThisSeat();
 	}
 }

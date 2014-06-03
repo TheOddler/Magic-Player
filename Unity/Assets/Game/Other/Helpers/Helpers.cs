@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -13,7 +14,7 @@ public static class Helpers {
 		int n = list.Count;  
 		while (n > 1) {  
 			n--;  
-			int k = Random.Range(0, n + 1);  
+			int k = UnityEngine.Random.Range(0, n + 1);  
 			T value = list[k];  
 			list[k] = list[n];  
 			list[n] = value;  
@@ -45,6 +46,17 @@ public static class Helpers {
 	
 	public static string Simplify(this string name) {
 		return name.Unidecode().ToLowerInvariant();
+	}
+	
+	public static string BypassCrosdomain(string url, string format) {
+		return
+			"http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20html%20where%20url%3D'" +
+				Uri.EscapeUriString(Uri.EscapeUriString(url)) + //Double encoding fixes the 400 error you get when having spaces
+				"'%0A&format=" + format;
+	}
+	
+	public static T RandomElement<T>(this List<T> list) {
+		return list[UnityEngine.Random.Range(0, list.Count)];
 	}
 	
 }

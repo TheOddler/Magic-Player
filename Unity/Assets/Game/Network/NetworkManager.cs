@@ -1,27 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class NetworkManager : Photon.MonoBehaviour {
-
-	const int PLAYER_GROUP = 0;
+public class NetworkManager : NetworkMonobehaviour {
 
 	public string _version = "0.0.1prealpha";
 	public string _roomName = "Room";
 
-	public GameObject _playerPrefab;
-
 	// Use this for initialization
 	void Start () {
+		PhotonNetwork.logLevel = PhotonLogLevel.ErrorsOnly;
+		PhotonNetwork.autoCleanUpPlayerObjects = false;
+		
 		PhotonNetwork.ConnectUsingSettings(_version);
+		//bool useNat = !Network.HavePublicAddress();
+		//Network.InitializeServer(32, 25000, useNat);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-
 	}
 
 	void OnJoinedLobby() {
-		Debug.Log( PhotonNetwork.JoinRandomRoom() );
+		Debug.Log ("OnJoinedLobby");
+		PhotonNetwork.JoinRandomRoom();
 	}
 
 	void OnPhotonRandomJoinFailed() {
@@ -29,13 +30,8 @@ public class NetworkManager : Photon.MonoBehaviour {
 		PhotonNetwork.CreateRoom(_roomName);
 	}
 
-	void OnJoinedRoom() {
-		Debug.Log ("OnJoinedRoom");
-		PhotonNetwork.Instantiate(_playerPrefab.name, Vector3.zero, Quaternion.identity, PLAYER_GROUP);
-	}
-
 	void OnGUI() {
-		GUILayout.Label(PhotonNetwork.connectionStateDetailed.ToString());
+		GUILayout.Label("Photon: " + PhotonNetwork.connectionStateDetailed.ToString() + "\tUNet: " + Network.peerType.ToString());
 	}
 
 

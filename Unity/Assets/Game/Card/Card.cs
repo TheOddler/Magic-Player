@@ -6,7 +6,7 @@ public enum CardLocation {
 	Field,
 }
 
-public class Card : Photon.MonoBehaviour {
+public class Card : NetworkMonobehaviour {
 	
 	const int MAX_LETTERS_WIDTH_NAME = 14;
 	
@@ -26,21 +26,15 @@ public class Card : Photon.MonoBehaviour {
 		get {
 			return _name;
 		}
-		set {
-			if (_name != value) {
-				_name = value;
-				UpdateInfo();
-			}
-		}
 	}
 
-	public Player _owner;
-	public Player Owner {
+	public int _ownerNumber;
+	public int OwnerNumber {
 		get {
-			return _owner;
+			return _ownerNumber;
 		}
 		set {
-			_owner = value;
+			_ownerNumber = value;
 		}
 	}
 	
@@ -57,9 +51,12 @@ public class Card : Photon.MonoBehaviour {
 	public Transform _wantedTransform;
 	
 	
+	bool _tapped = false;
+	bool _flipped = false;
+	bool _faceDown = false;
+	
 	
 	void Start () {
-		if (!string.IsNullOrEmpty(_name)) UpdateInfo();
 		_wantedTransform = transform;
 	}
 	
@@ -68,20 +65,41 @@ public class Card : Photon.MonoBehaviour {
 		transform.rotation = Quaternion.RotateTowards(transform.rotation, _wantedTransform.rotation, 90.0f * Time.deltaTime);
 	}
 	
+	void OnPlayerConnected(NetworkPlayer player) {
+		CallRemote(player, SyncData, _name, _ownerNumber);
+	}
 	
+	void OnPhotonPlayerConnected (PhotonPlayer player) {
+		CallRemote(player, SyncData, _name, _ownerNumber);
+	}
 	
-	public void UpdateInfo() {
-		if (string.IsNullOrEmpty(_name)) {
-			throw new UnityException("Trying to update the card info without setting a _name");
+	public void Initialize(string name, int ownerNumber) {
+		SyncData(name, ownerNumber);
+		CallRemote(CallMode.Others, SyncData, name, ownerNumber);
+	}
+	[RPC]
+	void SyncData(string name, int ownerNumber) {
+		if (string.IsNullOrEmpty(name)) {
+			throw new UnityException("Trying to initialize with invaled name");
 		}
 		
-		if (_info != null) { // We already initialized once
-			_info.Updated -= HandleInfoUpdated; // Different name so we need te reinitialize.
+		//
+		// Name
+		// -----------------------------
+		// Set name and get info based on it
+		_name = name;
+		if (_info != null) { //Make sure we aren't subscribed to the Update of our info twice.
+			_info.Updated -= HandleInfoUpdated;
 		}
 		// (Re)Initialize
-		_info = CardInfoManager.Instance.GetCardInfo(_name);
+		_info = CardInfoManager.Instance.GetCardInfo(name);
 		_info.Updated += HandleInfoUpdated;
 		HandleInfoUpdated();
+		
+		//
+		// Owner Number
+		// -----------------------------
+		_ownerNumber = OwnerNumber;
 	}
 	
 	public void HandleInfoUpdated() {

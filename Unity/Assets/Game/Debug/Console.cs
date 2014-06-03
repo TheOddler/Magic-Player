@@ -13,6 +13,7 @@ using System.Linq;
 public class Console : MonoBehaviour
 {
 	public static readonly Version version = new Version(1, 0);
+	public const int START_TOP = 20;
 	
 	struct ConsoleMessage
 	{
@@ -34,12 +35,11 @@ public class Console : MonoBehaviour
 	public KeyCode collapseToggleKey = KeyCode.Plus;
 	
 	List<ConsoleMessage> entries = new List<ConsoleMessage>();
-	Vector2 scrollPos;
 	bool show = true;
 	bool collapse;
+	Vector2 scrollPos;
 	
-	// Visual elements:
-	const int margin = 20;
+	
 	
 	void OnEnable  () { Application.RegisterLogCallback(HandleLog); }
 	void OnDisable () { Application.RegisterLogCallback(null); }
@@ -62,6 +62,9 @@ public class Console : MonoBehaviour
 			return;
 		}
 		
+		
+		GUILayout.BeginArea(new Rect(0, START_TOP, Screen.width, Screen.height - START_TOP));
+		scrollPos = GUILayout.BeginScrollView(scrollPos);
 		for (int i = 0; i < entries.Count; i++) {
 			ConsoleMessage entry = entries[i];
 			
@@ -72,22 +75,24 @@ public class Console : MonoBehaviour
 			
 			// Change the text colour according to the log type
 			switch (entry.type) {
-				case LogType.Error:
-				case LogType.Exception:
-					GUI.contentColor = Color.red;
-					break;
-					
-				case LogType.Warning:
-					GUI.contentColor = Color.yellow;
-					break;
-					
-				default:
-					GUI.contentColor = Color.white;
-					break;
+			case LogType.Error:
+			case LogType.Exception:
+				GUI.contentColor = Color.red;
+				break;
+				
+			case LogType.Warning:
+				GUI.contentColor = Color.yellow;
+				break;
+				
+			default:
+				GUI.contentColor = Color.white;
+				break;
 			}
 			
 			GUILayout.Label(entry.message);
 		}
+		GUILayout.EndScrollView();
+		GUILayout.EndArea();
 	}
 	
 	/// <summary>
@@ -98,7 +103,7 @@ public class Console : MonoBehaviour
 	/// <param name="type">The type of message: error/exception, warning, or assert.</param>
 	void HandleLog (string message, string stackTrace, LogType type)
 	{
-		ConsoleMessage entry = new ConsoleMessage(message, stackTrace, type, Time.realtimeSinceStartup + 10.0f);
+		ConsoleMessage entry = new ConsoleMessage(message, stackTrace, type, Time.realtimeSinceStartup + 15.0f);
 		entries.Add(entry);
 	}
 }
