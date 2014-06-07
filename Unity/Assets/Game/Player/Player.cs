@@ -40,12 +40,12 @@ public class Player : NetworkMonobehaviour {
 	
 	void Update () {
 		if (IsMine) {
-			if (Input.GetMouseButtonUp(0)) {
-				var card = NetworkInstantiate<Card>(_cardPrefab, Vector3.zero, Quaternion.identity);
-				card.Initialize(_testCards.RandomElement(), _playerNumber);
+			foreach (var input in SmartInput.InputInfo) {
+				if (input.action == InputAction.Click) {
+					var card = NetworkInstantiate<Card>(_cardPrefab, Vector3.zero, Quaternion.identity);
+					card.Initialize(_testCards.RandomElement(), _playerNumber);
+				}
 			}
-			
-			
 		}
 	}
 	
