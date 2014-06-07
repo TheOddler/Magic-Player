@@ -35,4 +35,9 @@ public class PlayerSeat : MonoBehaviour {
 		}
 		EnableCamera();
 	}
+	public void LeaveSeat() {
+		var playerManager = PlayersManager.Instance;
+		playerManager.OverviewCamera.gameObject.SetActive(true);
+		DisableCamera();
+	}
 }

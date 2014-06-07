@@ -59,4 +59,7 @@ public static class Helpers {
 		return list[UnityEngine.Random.Range(0, list.Count)];
 	}
 	
+	public static bool ContainsLayer(this LayerMask mask, int layer) {
+		return (mask.value & (1 << layer)) > 0;
+	}
 }

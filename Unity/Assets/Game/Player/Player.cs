@@ -21,14 +21,19 @@ public class Player : NetworkMonobehaviour {
 		}
 	}
 	
-	Camera _camera;
+	PlayerSeat _seat;
+	public PlayerSeat Seat {
+		get {
+			return _seat;
+		}
+	}
 	
 	void Awake () {
 		InitializeNetworking();
 		PlayersManager.Instance.RegisterPlayer(this);
 	}
 
-	void Start () {
+	void Start () { 
 		if (IsMine) {
 			RequestPlayerNumber();
 		}
@@ -41,7 +46,7 @@ public class Player : NetworkMonobehaviour {
 	void Update () {
 		if (IsMine) {
 			foreach (var input in SmartInput.InputInfo) {
-				if (input.action == InputAction.Click) {
+				if (input.action == InputAction.SingleClick) {
 					var card = NetworkInstantiate<Card>(_cardPrefab, Vector3.zero, Quaternion.identity);
 					card.Initialize(_testCards.RandomElement(), _playerNumber);
 				}
@@ -84,6 +89,12 @@ public class Player : NetworkMonobehaviour {
 			// If after requesting a number it turns out you're a player, and not an observer
 			TakeSeat();
 		}
+		else {
+			if (_seat != null) {
+				_seat.LeaveSeat();
+			}
+			_seat = null;
+		}
 	}
 	
 	//
@@ -91,6 +102,7 @@ public class Player : NetworkMonobehaviour {
 	// ----------------------------
 	void TakeSeat() {
 		// Set the correct camera
-		PlayersManager.Instance.PlayerSeats[_playerNumber].TakeThisSeat();
+		_seat = PlayersManager.Instance.PlayerSeats[_playerNumber];
+		_seat.TakeThisSeat();
 	}
 }

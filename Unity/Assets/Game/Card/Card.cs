@@ -6,8 +6,7 @@ public enum CardLocation {
 	Field,
 }
 
-public class Card : NetworkMonobehaviour {
-	
+public class Card : NetworkMonobehaviour, ISmartInputListener {
 	const int MAX_LETTERS_WIDTH_NAME = 14;
 	
 	//
@@ -15,6 +14,8 @@ public class Card : NetworkMonobehaviour {
 	// ----------------------
 	public Renderer _cardFrontRenderer;
 	public TextMesh _powerToughness;
+	public Collider _collider;
+	public LayerMask _fieldGroundMask;
 	
 	//
 	// Info
@@ -48,8 +49,8 @@ public class Card : NetworkMonobehaviour {
 		}
 	}
 	
-	public Transform _wantedTransform;
-	
+	RawInputInfo _draggingInputInfo;
+	Vector3 _draggingOffset;
 	
 	bool _tapped = false;
 	bool _flipped = false;
@@ -57,12 +58,45 @@ public class Card : NetworkMonobehaviour {
 	
 	
 	void Start () {
-		_wantedTransform = transform;
 	}
 	
 	void Update () {
-		transform.position = Vector3.MoveTowards(transform.position, _wantedTransform.position, 10.0f * Time.deltaTime);
-		transform.rotation = Quaternion.RotateTowards(transform.rotation, _wantedTransform.rotation, 90.0f * Time.deltaTime);
+		if (_location == CardLocation.Field) {
+			if (_draggingInputInfo != null /*&& _draggingInputInfo.phase == RawInputPhase.Moved*/) {
+				Ray ray = PlayersManager.Instance.LocalPlayer.Seat.Camera.ScreenPointToRay(_draggingInputInfo.position);
+				RaycastHit hitInfo;
+				if (Physics.Raycast(ray, out hitInfo, float.PositiveInfinity, _fieldGroundMask)) {
+				
+					float cardThickness = _collider.bounds.size.y;
+					Vector3 cardThicknessOffset = ray.direction / ray.direction.y * cardThickness;
+					
+					transform.position = hitInfo.point + _draggingOffset + cardThicknessOffset;
+				}
+				
+				if (_draggingInputInfo.phase == RawInputPhase.Ended) {
+					_draggingInputInfo.beingUsed = false;
+					_draggingInputInfo = null;
+					CallRemote(CallMode.Others, FinishMove, transform.position);
+				}
+			}
+		}
+	}
+	
+	public void HandleRawInput (RawInputInfo input, RaycastHit hitInfo) {
+		if (input.phase == RawInputPhase.Began) {
+			_draggingInputInfo = input;
+			_draggingInputInfo.beingUsed = true;
+			_draggingOffset = transform.position - hitInfo.point;
+		}
+	}
+	
+	public void HandleInput (InputInfo input, RaycastHit hitInfo) {
+		
+	}
+	
+	[RPC]
+	void FinishMove(Vector3 pos) {
+		transform.position = pos;
 	}
 	
 	void OnPlayerConnected(NetworkPlayer player) {
