@@ -48,11 +48,14 @@ public class Player : NetworkMonobehaviour {
 			foreach (var input in SmartInput.InputInfo) {
 				if (input.action == InputAction.SingleClick) {
 					var card = NetworkInstantiate<Card>(_cardPrefab, Vector3.zero, Quaternion.identity);
-					card.Initialize(_testCards.RandomElement(), _playerNumber);
+					var testName = _testCards.RandomElement();
+					//Debug.Log("Creating card: " + testName);
+					card.Initialize(testName, _playerNumber);
 				}
 			}
 		}
 	}
+	
 	
 	void OnPlayerConnected(NetworkPlayer player) {
 		CallRemote(player, DoSetPlayerNumber, _playerNumber);
@@ -62,26 +65,41 @@ public class Player : NetworkMonobehaviour {
 		CallRemote(player, DoSetPlayerNumber, _playerNumber);
 	}
 	
+	void OnDisconnectedFromServer(NetworkDisconnection info) {
+		Destroy(gameObject);
+	}
+	
+	void OnLeftRoom() {
+		Destroy(gameObject);
+	}
+	
 	
 	//
 	// Player Number
 	// -------------------------------
 	void RequestPlayerNumber() {
+		Debug.Log("RequestPlayerNumber");
+		if (Network.isServer) {
+			DoRequestPlayerNumber();
+		}
 		CallRemote (CallMode.Server, DoRequestPlayerNumber);
 	}
 	[RPC]
 	void DoRequestPlayerNumber() {
+		Debug.Log("DoRequestPlayerNumber");
 		if (!IsServer) throw new UnityException("This should only be called on the server since it's the server that manages the player numbers.");
 		
 		PlayersManager.Instance.RequestNumberFor(this);
 	}
 	
 	public void SetPlayerNumber(int number) {
+		Debug.Log("SetPlayerNumber: " + number);
 		DoSetPlayerNumber(number);
 		CallRemote(CallMode.Others, DoSetPlayerNumber, number);
 	}
 	[RPC]
 	void DoSetPlayerNumber(int number) {
+		Debug.Log("DoSetPlayerNumber: " + number);
 		_playerNumber = number;
 		name = "Player " + number;
 		
@@ -101,6 +119,7 @@ public class Player : NetworkMonobehaviour {
 	// Take Seat
 	// ----------------------------
 	void TakeSeat() {
+		Debug.Log("TakeSeat");
 		// Set the correct camera
 		_seat = PlayersManager.Instance.PlayerSeats[_playerNumber];
 		_seat.TakeThisSeat();

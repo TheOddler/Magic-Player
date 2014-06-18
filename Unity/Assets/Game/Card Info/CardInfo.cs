@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,8 @@ public class CardInfo {
 
 	public string Name { get; private set; }
 	public string ImageURL { get; private set; }
+	
+	public string Type { get; private set; }
 
 	public string ManaCost { get; private set; }
 	public double ConvertedManaCost { get; private set; }
@@ -24,6 +27,11 @@ public class CardInfo {
 	
 	public long MultiverseID { get; private set; }
 
+
+
+
+
+
 	public CardInfo(string name) {
 		Name = name;
 
@@ -36,111 +44,96 @@ public class CardInfo {
 		}
 	}
 	
-	public void SetInfoFromLocalDatabase(Dictionary<string,object> info) {
+	public void SetInfoOnSeparateThread(Dictionary<string,object> info) {
 		lock (this) {
-			Name = info["name"] as string;
+			GetCommonInfoDefault(info);
 			
-			if (info.ContainsKey("imageName")) {
-				ImageURL = "http://mtgimage.com/card/" + (info["imageName"] as string) + ".jpg";
+			//temp fix for local database land images
+			if (Type.Contains("Basic Land")) {
+				ImageURL = "http://mtgimage.com/card/" + Name +	".jpg";
 			}
 			
-			if (info.ContainsKey("manaCost")) ManaCost = info["manaCost"] as string;
-			
-			// can have a decimal point, though this only occurs with unhinged cards.
-			if (info.ContainsKey ("cmc")) {
-				object cmc = info["cmc"];
-				if (cmc.GetType() == typeof(double)) {
-					ConvertedManaCost = (double)cmc;
-				}
-				else {
-					ConvertedManaCost = (double)((long)cmc);
-				}
+			if (!Type.Contains("Land")) {
+				GetManaInfoDefault(info);
 			}
-
-			if (info.ContainsKey("power")) Power = info["power"] as string;
-			if (info.ContainsKey("toughness")) Toughness = info["toughness"] as string;
-			if (info.ContainsKey("loyalty")) Loyalty = (long)info["loyalty"];
-
-			if (info.ContainsKey("text")) Text = info["text"] as string;
-			if (info.ContainsKey("flavor")) Flavor = info["flavor"] as string;
-			
-			if (info.ContainsKey("multiverseid")) MultiverseID = (long)info["multiverseid"];
+			if (Type.Contains("Creature")) {
+				GetPowerAndThoughnessInfoDefault(info);
+			}
+			if (Type.Contains("Planeswalker")) {
+				GetLoyaltyInfoDefault(info); //Call this even when given an empty json, since it'll set the imageurl.
+			}
 		}
-		
 		//Used on separate thread, so don't call update here. Will be called when all cards are loaded by the CardInfoManager.
 	}
 	
-	public void SetInfoFromMTGdbinfo(Dictionary<string,object> info) {
-		lock (this) {
-			Name = info["name"] as string;
-			
-			if (info.ContainsKey("name")) {
-				ImageURL = "http://mtgimage.com/card/" + (info["name"] as string) + ".jpg";
-			}
-			
-			if (info.ContainsKey("manaCost")) ManaCost = info["manaCost"] as string; //TODO possibly manacost instead of capital C
-			
-			// can have a decimal point, though this only occurs with unhinged cards.
-			if (info.ContainsKey ("convertedManaCost")) {
-				object cmc = info["convertedManaCost"];
-				if (cmc.GetType() == typeof(double)) {
-					ConvertedManaCost = (double)cmc;
-				}
-				else {
-					ConvertedManaCost = (double)((long)cmc);
-				}
-			}
-			
-			if (info.ContainsKey("power")) Power = info["power"] as string;
-			if (info.ContainsKey("toughness")) Toughness = info["toughness"] as string;
-			if (info.ContainsKey("loyalty")) Loyalty = (long)info["loyalty"];
-			
-			if (info.ContainsKey("description")) Text = info["description"] as string;
-			if (info.ContainsKey("flavor")) Flavor = info["flavor"] as string;
-			
-			if (info.ContainsKey("id")) MultiverseID = (long)info["id"];
+	public void SetInfoFromMTGdb(string json) {
+		var cards = Json.Deserialize(json) as List<object>;
+		Dictionary<string,object> info;
+		
+		if (cards.Count > 0) {
+			info = cards[0] as Dictionary<string,object>;
+		}
+		else {
+			Debug.Log("Couldn't get data for the card");
+			info = new Dictionary<string,object>();
+		}
+	
+		GetCommonInfoDefault(info); //The type info gathered in here is very limited for MTGdb, no super-or subtypes is included
+		
+		if (!Type.Contains("Land")) {
+			GetManaInfoDefault(info);
+		}
+		if (Type.Contains("Creature")) {
+			GetPowerAndThoughnessInfoDefault(info);
+		}
+		if (Type.Contains("Planeswalker")) {
+			GetLoyaltyInfoDefault(info); //Call this even when given an empty json, since it'll set the imageurl.
 		}
 		
 		CallUpdated();
 	}
 	
-	public void SetInfoFromMTGapicom(Dictionary<string,object> info) {
-		lock (this) {
-			Name = info["name"] as string;
-			
-			if (info.ContainsKey("name")) {
-			//if (info.ContainsKey("image")) {
-				ImageURL = "http://mtgimage.com/card/" + (info["name"] as string).Simplify() + ".jpg";
-				//ImageURL = info["image"] as string; //don't use the gatherer image. This will give crossdomain error.
+	void GetCommonInfoDefault(Dictionary<string,object> info) {
+		Name = TryGetValueFromJson<string>(info, new []{"name"}, Name);
+		
+		ImageURL =  "http://mtgimage.com/card/" + 
+			TryGetValueFromJson<string>(info, new []{"imageName", "name"}, Name) +
+				".jpg";
+		
+		Text = TryGetValueFromJson<string>(info, new []{"text", "description"}, null);
+		Flavor = TryGetValueFromJson<string>(info, new []{"flavor"}, null);
+		
+		Type = TryGetValueFromJson<string>(info, new []{"type"}, "");
+		
+		MultiverseID = TryGetValueFromJson<long>(info, new []{"multiverseid", "id"}, 0);
+	}
+	
+	void GetManaInfoDefault(Dictionary<string,object> info) {
+		ManaCost = TryGetValueFromJson<string>(info, new []{"manaCost"}, null);
+		ConvertedManaCost = TryGetValueFromJson<double>(info, new []{"cmc", "convertedManaCost"}, 0.0);
+	}
+	
+	void GetLoyaltyInfoDefault(Dictionary<string,object> info) {
+		Loyalty = TryGetValueFromJson<long>(info, new []{"loyalty"}, 0);
+	}
+	void GetPowerAndThoughnessInfoDefault(Dictionary<string,object> info) {
+		Power = TryGetValueFromJson<string>(info, new []{"power"}, null);
+		Toughness = TryGetValueFromJson<string>(info, new []{"toughness"}, null);
+	}
+	
+	
+	
+	
+	
+	T TryGetValueFromJson<T>(Dictionary<string,object> info, string[] possibleValueNames, T notFoundValue) {
+		foreach (string valueName in possibleValueNames) {
+			object value;
+			if (info.TryGetValue(valueName, out value)) {
+				return (T)Convert.ChangeType(value, typeof(T));
 			}
-			
-			if (info.ContainsKey("mana")) {
-				/*var mana = info["mana"];
-				var manaObjectList = mana as List<object>;
-				var manaStringList = manaObjectList.OfType<string>();
-				var manaArray = manaStringList.ToArray();*/
-				ManaCost = string.Join("\n", (info["mana"] as List<object>).OfType<string>().ToArray());
-			}
-			
-			// can have a decimal point, though this only occurs with unhinged cards.
-			if (info.ContainsKey ("cmc")) {
-				ConvertedManaCost = double.Parse(info["cmc"] as string);
-			}
-			
-			if (info.ContainsKey("power")) Power = info["power"] as string;
-			if (info.ContainsKey("toughness")) Toughness = info["toughness"] as string;
-			if (info.ContainsKey("loyalty")) Loyalty = (long)info["loyalty"];
-			
-			if (info.ContainsKey("text")) {
-				Text = string.Join("\n", (info["text"] as List<object>).OfType<string>().ToArray());
-			}
-			if (info.ContainsKey("flavor")) {
-				Flavor = string.Join("\n", (info["flavor"] as List<object>).OfType<string>().ToArray());
-			}
-			if (info.ContainsKey("id")) MultiverseID = long.Parse(info["id"] as string);
 		}
 		
-		CallUpdated();
+		return notFoundValue; //or use Default(T)
 	}
 	
 	private Material _imageMaterial;

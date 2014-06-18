@@ -94,25 +94,44 @@ public class Card : NetworkMonobehaviour, ISmartInputListener {
 		
 	}
 	
+	public void HandleStartHoover() {
+		
+	}
+	public void HandleEndHoover() {
+		
+	}
+	
 	[RPC]
 	void FinishMove(Vector3 pos) {
 		transform.position = pos;
 	}
 	
+	
+	
+	
+	
 	void OnPlayerConnected(NetworkPlayer player) {
-		CallRemote(player, SyncData, _name, _ownerNumber);
+		CallRemote(player, SyncData, _name, _ownerNumber, transform.position);
 	}
 	
 	void OnPhotonPlayerConnected (PhotonPlayer player) {
-		CallRemote(player, SyncData, _name, _ownerNumber);
+		CallRemote(player, SyncData, _name, _ownerNumber, transform.position);
 	}
 	
+	void OnDestroy() {
+		_info.Updated -= HandleInfoUpdated;
+	}
+	
+	
+	
+	
+	
 	public void Initialize(string name, int ownerNumber) {
-		SyncData(name, ownerNumber);
-		CallRemote(CallMode.Others, SyncData, name, ownerNumber);
+		SyncData(name, ownerNumber, transform.position);
+		CallRemote(CallMode.Others, SyncData, name, ownerNumber, transform.position);
 	}
 	[RPC]
-	void SyncData(string name, int ownerNumber) {
+	void SyncData(string name, int ownerNumber, Vector3 pos) {
 		if (string.IsNullOrEmpty(name)) {
 			throw new UnityException("Trying to initialize with invaled name");
 		}
@@ -134,6 +153,11 @@ public class Card : NetworkMonobehaviour, ISmartInputListener {
 		// Owner Number
 		// -----------------------------
 		_ownerNumber = OwnerNumber;
+		
+		//
+		// Position
+		// -----------------------------
+		transform.position = pos;
 	}
 	
 	public void HandleInfoUpdated() {

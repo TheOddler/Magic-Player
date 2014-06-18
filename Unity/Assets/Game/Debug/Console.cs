@@ -62,8 +62,8 @@ public class Console : MonoBehaviour
 			return;
 		}
 		
-		
 		GUILayout.BeginArea(new Rect(0, START_TOP, Screen.width, Screen.height - START_TOP));
+		GUILayout.FlexibleSpace();
 		scrollPos = GUILayout.BeginScrollView(scrollPos);
 		for (int i = 0; i < entries.Count; i++) {
 			ConsoleMessage entry = entries[i];

@@ -91,6 +91,18 @@ public abstract class NetworkMonobehaviour : MonoBehaviour {
 		_photonView.RPC(method.Method.Name, player, arg1, arg2);
 	}
 	
+	// Three
+	protected void CallRemote<A, B, C>(CallMode type, Action<A, B, C> method, A arg1, B arg2, C arg3) {
+		CallRemote (type, method.Method.Name, arg1, arg2, arg3);
+	}
+	
+	protected void CallRemote<A, B, C>(NetworkPlayer player, Action<A, B, C> method, A arg1, B arg2, C arg3) {
+		_networkView.RPC(method.Method.Name, player, arg1, arg2, arg3);
+	}
+	
+	protected void CallRemote<A, B, C>(PhotonPlayer player, Action<A, B, C> method, A arg1, B arg2, C arg3) {
+		_photonView.RPC(method.Method.Name, player, arg1, arg2, arg3);
+	}
 	
 	
 	

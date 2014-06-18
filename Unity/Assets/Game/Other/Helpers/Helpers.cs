@@ -54,6 +54,17 @@ public static class Helpers {
 				Uri.EscapeUriString(Uri.EscapeUriString(url)) + //Double encoding fixes the 400 error you get when having spaces
 				"'%0A&format=" + format;
 	}
+	public static string RemoveBypassPadding(string reply) {
+		int start = reply.LastIndexOf("<p>");
+		if (start < 0) return "[]";
+		reply = reply.Remove(0, start+3); //+3 for the <p> itself
+		
+		int end = reply.LastIndexOf("</p>");
+		if (end < 0) return "[]";
+		reply = reply.Remove(end); //removes the last xml padding, now it's just a json list
+		
+		return reply;
+	}
 	
 	public static T RandomElement<T>(this List<T> list) {
 		return list[UnityEngine.Random.Range(0, list.Count)];

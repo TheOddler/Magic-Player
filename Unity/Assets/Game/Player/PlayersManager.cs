@@ -90,7 +90,9 @@ public class PlayersManager : NetworkMonobehaviour {
 	void OnPhotonPlayerDisconnected(PhotonPlayer networkPlayer) {
 		// The PhotonPlayer will already be removed, so the owner of the leaving player's player object will be null.
 		var player = _players.Find(pl=>pl.PhotonPlayer == networkPlayer || pl.PhotonPlayer == null);
-		NetworkDestroy(player);
+		if (player != null) {
+			NetworkDestroy(player);
+		}
 	}
 	
 	

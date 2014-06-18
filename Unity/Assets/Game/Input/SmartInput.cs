@@ -115,26 +115,27 @@ public class SmartInput: MonoBehaviour {
 		
 		
 		
-		
-		
-		foreach (var rawInput in RawInputInfoUnused) {
-			Ray ray = PlayersManager.Instance.LocalPlayer.Seat.Camera.ScreenPointToRay(rawInput.position);
-			RaycastHit hitInfo;
-			if (Physics.Raycast(ray, out hitInfo)) {
-				ISmartInputListener listener = hitInfo.transform.GetComponent(typeof(ISmartInputListener)) as ISmartInputListener;
-				if (listener != null) {
-					listener.HandleRawInput(rawInput, hitInfo);
+		var localPlayer = PlayersManager.Instance.LocalPlayer;
+		if (localPlayer != null && localPlayer.Seat != null) {
+			foreach (var rawInput in RawInputInfoUnused) {
+				Ray ray = localPlayer.Seat.Camera.ScreenPointToRay(rawInput.position);
+				RaycastHit hitInfo;
+				if (Physics.Raycast(ray, out hitInfo)) {
+					ISmartInputListener listener = hitInfo.transform.GetComponent(typeof(ISmartInputListener)) as ISmartInputListener;
+					if (listener != null) {
+						listener.HandleRawInput(rawInput, hitInfo);
+					}
 				}
 			}
-		}
-		
-		foreach (var input in _inputInfo) {
-			Ray ray = PlayersManager.Instance.LocalPlayer.Seat.Camera.ScreenPointToRay(input.position);
-			RaycastHit hitInfo;
-			if (Physics.Raycast(ray, out hitInfo)) {
-				ISmartInputListener listener = hitInfo.transform.GetComponent(typeof(ISmartInputListener)) as ISmartInputListener;
-				if (listener != null) {
-					listener.HandleInput(input, hitInfo);
+			
+			foreach (var input in _inputInfo) {
+				Ray ray = localPlayer.Seat.Camera.ScreenPointToRay(input.position);
+				RaycastHit hitInfo;
+				if (Physics.Raycast(ray, out hitInfo)) {
+					ISmartInputListener listener = hitInfo.transform.GetComponent(typeof(ISmartInputListener)) as ISmartInputListener;
+					if (listener != null) {
+						listener.HandleInput(input, hitInfo);
+					}
 				}
 			}
 		}
@@ -250,7 +251,7 @@ public class SmartInput: MonoBehaviour {
 	
 	
 	void OnGUI () {
-		foreach(var input in _rawInputs) {
+		/*foreach(var input in _rawInputs) {
 			GUILayout.Label("Raw Input: ");
 			GUILayout.Label("id: " +				input.id);
 			
@@ -268,6 +269,6 @@ public class SmartInput: MonoBehaviour {
 			GUILayout.Label("phasePreviousFrameByFrame: " +	input.phasePrevious);
 
 			GUILayout.Label("count" +				input.count);
-		}
+		}*/
 	}
 }
