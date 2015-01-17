@@ -1,4 +1,5 @@
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public enum CardLocation {
@@ -58,6 +59,9 @@ public class Card : NetworkMonobehaviour, ISmartInputListener {
 	
 	
 	void Start () {
+		if (!string.IsNullOrEmpty(_name)) {
+			Initialize(_name, -1);
+		}
 	}
 	
 	void Update () {
